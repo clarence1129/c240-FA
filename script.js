@@ -1,4 +1,4 @@
-console.log("AI Study Buddy Chatbot");
+console.log('AI Study Buddy Chatbot');
 
 function openChatbotWithPrompt(prompt) {
   if (window.botpress && typeof window.botpress.open === 'function') {
@@ -79,6 +79,130 @@ function openChatbotWithPrompt(prompt) {
 
 document.addEventListener('DOMContentLoaded', function () {
   const tryNowButton = document.getElementById('tryNowBtn');
+  const quizCard = document.getElementById('quizCard');
+  const tutorCard = document.getElementById('tutorCard');
+  const revisionCard = document.getElementById('revisionCard');
+  const voiceChatMessages = document.getElementById('voiceChatMessages');
+  const voiceStatus = document.getElementById('voiceStatus');
+  const voiceRecordBtn = document.getElementById('voiceRecordBtn');
+  const voiceStopBtn = document.getElementById('voiceStopBtn');
+
+  let recognition = null;
+  let isListening = false;
+
+  function setVoiceStatus(message, isError) {
+    if (!voiceStatus) {
+      return;
+    }
+
+    voiceStatus.textContent = message;
+    voiceStatus.classList.toggle('error', Boolean(isError));
+  }
+
+  function updateVoiceButtons() {
+    if (!voiceRecordBtn || !voiceStopBtn) {
+      return;
+    }
+
+    voiceRecordBtn.disabled = isListening;
+    voiceStopBtn.hidden = !isListening;
+    voiceRecordBtn.textContent = isListening ? '🎤 Listening...' : '🎤 Start Recording';
+  }
+
+  function addMessage(text, role) {
+    if (!voiceChatMessages) {
+      return;
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `message ${role}`;
+    bubble.textContent = text;
+    voiceChatMessages.appendChild(bubble);
+    voiceChatMessages.scrollTop = voiceChatMessages.scrollHeight;
+  }
+
+  function generateReply(text) {
+    const lowerText = text.toLowerCase();
+
+    if (lowerText.includes('quiz')) {
+      return 'Absolutely. Here is a quick quiz prompt: what does AI stand for?';
+    }
+
+    if (lowerText.includes('revision') || lowerText.includes('revise')) {
+      return 'Let us revise together. Focus on key ideas, definitions, and one practice question.';
+    }
+
+    if (lowerText.includes('project management')) {
+      return 'Project management is about planning, organising tasks, and guiding a team to deliver goals on time.';
+    }
+
+    if (lowerText.includes('ai')) {
+      return 'AI stands for Artificial Intelligence, which means teaching computers to make decisions or solve problems.';
+    }
+
+    if (lowerText.includes('hello') || lowerText.includes('hi')) {
+      return 'Hello! I am your study buddy. Ask me about lessons, quizzes, or revision.';
+    }
+
+    return `I heard you say: ${text}. I can explain topics, quiz you, or help you revise.`;
+  }
+
+  function speakReply(text) {
+    if (!('speechSynthesis' in window)) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function handleVoiceInput(text) {
+    const trimmedText = text.trim();
+
+    if (!trimmedText) {
+      return;
+    }
+
+    addMessage(trimmedText, 'user');
+    const reply = generateReply(trimmedText);
+    addMessage(reply, 'bot');
+    speakReply(reply);
+    openChatbotWithPrompt(trimmedText);
+  }
+
+  function startVoiceRecognition() {
+    if (!recognition) {
+      setVoiceStatus('Speech recognition is not supported in this browser.', true);
+      return;
+    }
+
+    if (isListening) {
+      return;
+    }
+
+    try {
+      recognition.start();
+      isListening = true;
+      updateVoiceButtons();
+      setVoiceStatus('Listening... Speak now.');
+    } catch (error) {
+      setVoiceStatus('Microphone access is already in use.', true);
+    }
+  }
+
+  function stopVoiceRecognition() {
+    if (!recognition || !isListening) {
+      return;
+    }
+
+    recognition.stop();
+    isListening = false;
+    updateVoiceButtons();
+    setVoiceStatus('Recording stopped.');
+  }
 
   if (tryNowButton) {
     tryNowButton.addEventListener('click', function (event) {
@@ -86,8 +210,6 @@ document.addEventListener('DOMContentLoaded', function () {
       openChatbotWithPrompt('quiz me');
     });
   }
-
-  const quizCard = document.getElementById('quizCard');
 
   if (quizCard) {
     const handleQuizClick = function (event) {
@@ -104,8 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const tutorCard = document.getElementById('tutorCard');
-
   if (tutorCard) {
     const handleTutorClick = function (event) {
       event.preventDefault();
@@ -121,8 +241,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const revisionCard = document.getElementById('revisionCard');
-
   if (revisionCard) {
     const handleRevisionClick = function (event) {
       event.preventDefault();
@@ -136,5 +254,45 @@ document.addEventListener('DOMContentLoaded', function () {
         handleRevisionClick(event);
       }
     });
+  }
+
+  if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = function (event) {
+      const transcript = event.results[event.resultIndex][0].transcript;
+      handleVoiceInput(transcript);
+      isListening = false;
+      updateVoiceButtons();
+      setVoiceStatus('Voice message processed.');
+    };
+
+    recognition.onerror = function (event) {
+      isListening = false;
+      updateVoiceButtons();
+      setVoiceStatus(`Voice capture error: ${event.error}`, true);
+    };
+
+    recognition.onend = function () {
+      if (isListening) {
+        isListening = false;
+        updateVoiceButtons();
+      }
+    };
+
+    if (voiceRecordBtn) {
+      voiceRecordBtn.addEventListener('click', startVoiceRecognition);
+    }
+
+    if (voiceStopBtn) {
+      voiceStopBtn.addEventListener('click', stopVoiceRecognition);
+    }
+
+    updateVoiceButtons();
+  } else {
+    setVoiceStatus('Your browser does not support voice recording. Try Chrome or Edge.', true);
   }
 });

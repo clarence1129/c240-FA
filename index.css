@@ -205,6 +205,90 @@ border-radius:20px;
 box-shadow:0 10px 30px rgba(0,0,0,0.16);
 }
 
+.voice-chat-section{
+margin: 20px 80px 60px;
+}
+
+.voice-chat-card{
+background: rgba(255,255,255,0.96);
+color: #17406b;
+border-radius: 24px;
+padding: 30px;
+box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+}
+
+.voice-chat-header h2{
+margin-bottom: 10px;
+font-size: 30px;
+}
+
+.voice-chat-header p{
+margin-bottom: 20px;
+color: #4c6688;
+line-height: 1.6;
+}
+
+.voice-chat-messages{
+background: #f5f9ff;
+border: 1px solid #dfeeff;
+border-radius: 18px;
+padding: 18px;
+max-height: 320px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.message{
+padding: 12px 16px;
+border-radius: 14px;
+max-width: 85%;
+line-height: 1.5;
+}
+
+.message.user{
+background: #1565c0;
+color: white;
+align-self: flex-end;
+}
+
+.message.bot{
+background: #e8f2ff;
+color: #17406b;
+align-self: flex-start;
+}
+
+.voice-chat-controls{
+display: flex;
+flex-wrap: wrap;
+gap: 12px;
+align-items: center;
+}
+
+.voice-btn{
+padding: 12px 22px;
+font-size: 16px;
+}
+
+.voice-btn.secondary{
+background: #17406b;
+color: white;
+}
+
+.voice-btn:disabled{
+opacity: 0.6;
+cursor: not-allowed;
+transform: none;
+box-shadow: none;
+}
+
+.voice-status{
+font-size: 14px;
+color: #4c6688;
+}
+
 footer{
 text-align:center;
 padding:30px;
