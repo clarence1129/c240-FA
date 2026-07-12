@@ -25,9 +25,18 @@ border-bottom:1px solid rgba(255,255,255,0.2);
 }
 
 .logo{
+display:flex;
+align-items:center;
+gap:10px;
 font-size:24px;
 font-weight:700;
 color:#ffffff;
+}
+
+.logo img{
+width:38px;
+height:38px;
+object-fit:contain;
 }
 
 nav a{
@@ -364,4 +373,3 @@ color:white;
   }
 
 }
- 
